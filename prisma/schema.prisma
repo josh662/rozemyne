@@ -142,6 +142,7 @@ model Comment {
   user             User            @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
   mediaComponentId String? // Registra em que parte ele estava vendo (capítulo ou episódio)
   mediaComponent   MediaComponent? @relation(fields: [mediaComponentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  content          String
   spoiler          Boolean         @default(false)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @default(now()) @updatedAt
