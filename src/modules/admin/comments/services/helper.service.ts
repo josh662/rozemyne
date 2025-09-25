@@ -86,7 +86,9 @@ export class HelperService extends BaseHelperService {
         createdAt: EFieldType.DATE,
       },
       sortFields: ['id', 'mediaId', 'userId', 'mediaComponentId', 'createdAt'],
-      mergeWhere: {},
+      mergeWhere: {
+        mediaId: data.mediaId,
+      },
       select: {
         id: true,
         mediaId: true,
@@ -119,7 +121,7 @@ export class HelperService extends BaseHelperService {
 
     if (!record) {
       record = await this.repository.findUniqueOrThrow({
-        where: { id: data.id },
+        where: { id: data.id, mediaId: data.mediaId },
       });
 
       if (!renew) {
@@ -136,7 +138,7 @@ export class HelperService extends BaseHelperService {
     this.logger.log(`Updating a record`);
 
     const record = await this.repository.update({
-      where: { id: data.id },
+      where: { id: data.id, mediaId: data.mediaId },
       data: {
         content: data.content,
         spoiler: data.spoiler,
@@ -155,6 +157,7 @@ export class HelperService extends BaseHelperService {
     const record = await this.repository.delete({
       where: {
         id: data.id,
+        mediaId: data.mediaId,
       },
     });
 

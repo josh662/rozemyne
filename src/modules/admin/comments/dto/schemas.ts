@@ -19,7 +19,6 @@ export const createSchema = z.object({
 
 export const listSchema = createListSchema({
   id: z.string().trim().optional(),
-  mediaId: z.string().trim().optional(),
   userId: z.string().trim().optional(),
   mediaComponentId: z.string().trim().optional(),
   content: z.string().trim().optional(),
@@ -29,14 +28,17 @@ export const listSchema = createListSchema({
 
 export const findSchema = z.object({
   id: z.string().trim(),
+  mediaId: z.string().trim(),
 });
 
 export const updateSchema = z.object({
   id: z.string().trim(),
+  mediaId: z.string().trim(),
   content: z.string().trim().optional(),
   spoiler: z.boolean().optional(),
 });
 
 export const removeSchema = z.object({
   id: z.string().trim(),
+  mediaId: z.string().trim(),
 });

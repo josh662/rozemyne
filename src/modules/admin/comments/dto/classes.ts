@@ -10,7 +10,9 @@ import {
 
 export class BaseDto extends createZodDto(schema) {}
 export class CreateDto extends createZodDto(createSchema) {}
-export class ListDto extends createZodDto(listSchema) {}
+export class ListDto extends createZodDto(listSchema) {
+  mediaId: string;
+}
 export class FindDto extends createZodDto(findSchema) {}
 export class UpdateDto extends createZodDto(updateSchema) {}
 export class RemoveDto extends createZodDto(removeSchema) {}

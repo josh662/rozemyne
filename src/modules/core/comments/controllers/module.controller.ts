@@ -14,10 +14,9 @@ import {
   removeSchema,
   UpdateDto,
   updateSchema,
-} from '../dto';
+} from 'src/modules/admin/comments/dto';
 import { IResponse } from 'src/interfaces';
 import {
-  Admin,
   Auth,
   SwaggerCreate,
   SwaggerFind,
@@ -30,8 +29,7 @@ import { BaseModuleController } from 'src/shared/services';
 @ApiTags(origin)
 @ApiBearerAuth()
 @Auth()
-@Admin()
-@Controller({ path: `admin/${origin}` })
+@Controller({ path: origin })
 export class ModuleController extends BaseModuleController {
   constructor(private readonly moduleService: ModuleService) {
     super();
