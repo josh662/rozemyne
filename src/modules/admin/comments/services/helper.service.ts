@@ -119,7 +119,7 @@ export class HelperService extends BaseHelperService {
 
     if (!record) {
       record = await this.repository.findUniqueOrThrow({
-        where: { id: data.id, mediaId: data.mediaId },
+        where: { id: data.id },
       });
 
       if (!renew) {
@@ -136,7 +136,7 @@ export class HelperService extends BaseHelperService {
     this.logger.log(`Updating a record`);
 
     const record = await this.repository.update({
-      where: { id: data.id, mediaId: data.mediaId },
+      where: { id: data.id },
       data: {
         content: data.content,
         spoiler: data.spoiler,

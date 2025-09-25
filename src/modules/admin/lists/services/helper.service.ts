@@ -1,6 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-
-import { JwtService } from '@nestjs/jwt';
+import { z } from 'zod';
 
 import { PrismaService } from 'src/prisma';
 import {
@@ -10,14 +9,9 @@ import {
   BaseHelperService,
 } from 'src/shared/services';
 
+import { EFieldType, EPaginationMode, IProps, TList } from 'src/interfaces';
 import {
-  EFieldType,
-  EPaginationMode,
-  IProps,
-  JwtDto,
-  TList,
-} from 'src/interfaces';
-import {
+  media,
   IDefault,
   origin,
   TCreateRequest,
@@ -27,13 +21,11 @@ import {
   TUpdateRequest,
 } from '../dto';
 import { createId } from 'src/utils';
-import { EOriginRoutes } from 'src/routes';
 
 @Injectable()
 export class HelperService extends BaseHelperService {
   constructor(
     prisma: PrismaService,
-    private readonly jwtService: JwtService,
     private readonly eventService: EventService,
     private readonly cacheService: CacheService,
     searchService: SearchService,
@@ -42,58 +34,31 @@ export class HelperService extends BaseHelperService {
   }
   private origin = origin;
   private logger = new Logger(`${this.origin}:helper`);
-  private repository = this.prisma.session;
+  private repository = this.prisma.list;
 
-  async create(
-    props: IProps,
-    data: TCreateRequest,
-  ): Promise<IDefault & { token: string }> {
+  async create(props: IProps, data: TCreateRequest): Promise<IDefault> {
     this.logger.log(`Creating a new record`);
-
-    const lastSession = await this.repository.findFirst({
-      where: {
-        userId: data.userId,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-      select: {
-        number: true,
-      },
-    });
-
-    const lastSessionNumber = lastSession?.number || 0;
-    const sid = createId();
-
-    let token = '';
-    let decoded: JwtDto | null = null;
-
-    if (data.success) {
-      // Cria o jWT de acesso
-      token = this.generateToken({
-        userId: data.userId,
-        sessionId: sid,
-      });
-      decoded = this.jwtService.decode<JwtDto>(token);
-    }
 
     const record = await this.repository.create({
       data: {
-        id: sid,
+        id: createId(),
         userId: data.userId,
-        success: !!data.success,
-        error: data.error,
-        ipAddress: data.ipAddress,
-        userAgent: data.userAgent,
-        number: lastSessionNumber + 1,
-        expiredAt: decoded ? new Date(decoded.exp! * 1000) : null,
+        name: data.name,
       },
     });
+
+    props = {
+      userId: record.id,
+    };
+
+    if (data.addMedias) {
+      await this.changeMedias(record.id, data.addMedias, 'add');
+    }
 
     this.eventService.create(this.origin, record, { props });
     this.logger.log(`New record created (ID: ${record.id})`);
 
-    return { ...record, token };
+    return record;
   }
 
   async list(
@@ -116,25 +81,17 @@ export class HelperService extends BaseHelperService {
       restrictPaginationToMode,
       searchableFields: {
         id: EFieldType.STRING,
-        userId: EFieldType.STRING,
-        number: EFieldType.NUMBER,
-        success: EFieldType.BOOLEAN,
-        error: EFieldType.STRING,
-        ipAddress: EFieldType.STRING,
-        userAgent: EFieldType.STRING,
-        expiredAt: EFieldType.DATE,
+        name: EFieldType.STRING,
         createdAt: EFieldType.DATE,
       },
-      sortFields: ['id', 'number', 'success', 'expiredAt', 'createdAt'],
+      sortFields: ['id', 'name', 'createdAt'],
       mergeWhere: {
         userId: data.userId,
       },
       select: {
         id: true,
-        userId: true,
-        number: true,
-        success: true,
-        expiredAt: true,
+        name: true,
+        createdAt: true,
       },
     });
 
@@ -145,12 +102,13 @@ export class HelperService extends BaseHelperService {
     props: IProps,
     data: TFindRequest,
     renew = false,
-  ): Promise<IDefault> {
+  ): Promise<Omit<IDefault, 'password' | 'totpSecret'>> {
     this.logger.log(`Retrieving a single record`);
 
     type R = typeof this.repository;
     type RType = NonNullable<Awaited<ReturnType<R['findUniqueOrThrow']>>>;
-    let record: RType | null | undefined = undefined;
+    let record: Omit<RType, 'password' | 'totpSecret'> | null | undefined =
+      undefined;
 
     if (!renew) {
       record = await this.cacheService.get(this.origin, data.id);
@@ -176,8 +134,18 @@ export class HelperService extends BaseHelperService {
 
     const record = await this.repository.update({
       where: { id: data.id, userId: data.userId },
-      data: {},
+      data: {
+        name: data.name,
+      },
     });
+
+    if (data.addMedias) {
+      await this.changeMedias(record.id, data.addMedias, 'add');
+    }
+
+    if (data.removeMedias) {
+      await this.changeMedias(record.id, data.removeMedias, 'remove');
+    }
 
     this.eventService.update(this.origin, record, { props });
     await this.cacheService.del(this.origin, record.id);
@@ -189,7 +157,9 @@ export class HelperService extends BaseHelperService {
   async remove(props: IProps, data: TRemoveRequest): Promise<void> {
     this.logger.log(`Deleting a record`);
     const record = await this.repository.delete({
-      where: { id: data.id, userId: data.userId },
+      where: {
+        id: data.id,
+      },
     });
 
     this.eventService.remove(this.origin, record, { props });
@@ -197,47 +167,37 @@ export class HelperService extends BaseHelperService {
     this.logger.log(`One record was deleted (ID: ${record.id})`);
   }
 
-  // Métodos auxiliares
+  // Auxiliary Methods
 
-  generateToken(config: {
-    userId: string;
-    sessionId: string;
-    secret?: string;
-    expiresIn?: string;
-  }): string {
-    const payload: JwtDto = {
-      iss: String(process.env.PUBLIC_NAME),
-      sub: config.userId,
-      jti: config.sessionId,
-      nbf: Math.floor(Date.now() / 1000),
-    };
-    return this.jwtService.sign(payload, {
-      secret: config.secret || process.env.JWT_SECRET,
-      expiresIn: config.expiresIn || process.env.JWT_PERIOD,
-    });
-  }
-
-  async endSessions(userId: string, sessionId?: string) {
-    const sessions = await this.prisma.session.updateManyAndReturn({
-      where: {
-        id: sessionId, // Se "sessionId" for fornecida então acessa apenas uma, senão acessa todas do respectivo usuário
-        userId,
-        success: true,
-        expiredAt: {
-          gte: new Date(),
-        },
-      },
-      data: {
-        expiredAt: new Date(),
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    await this.cacheService.mdel(
-      EOriginRoutes.AUTH_GUARD,
-      sessions.map((s) => `user:${userId}:session:${s.id}`),
-    );
+  async changeMedias(
+    listId: string,
+    medias: Array<z.infer<typeof media>>,
+    action: 'add' | 'remove',
+  ): Promise<void> {
+    switch (action) {
+      case 'add': {
+        await this.prisma.listMedia.createMany({
+          skipDuplicates: true,
+          data: medias.map((media) => {
+            return {
+              listId,
+              mediaId: media.id,
+            };
+          }),
+        });
+        break;
+      }
+      case 'remove': {
+        await this.prisma.listMedia.deleteMany({
+          where: {
+            listId,
+            mediaId: {
+              in: medias.map((media) => media.id),
+            },
+          },
+        });
+        break;
+      }
+    }
   }
 }

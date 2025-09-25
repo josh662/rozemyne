@@ -22,7 +22,6 @@ export const createSchema = z.object({
 
 export const listSchema = createListSchema({
   id: z.string().trim().optional(),
-  userId: z.string().trim().optional(),
   number: z.int().optional(),
   success: z.coerce.boolean().optional(),
   error: z.string().trim().optional(),
@@ -34,12 +33,15 @@ export const listSchema = createListSchema({
 
 export const findSchema = z.object({
   id: z.string().trim(),
+  userId: z.string().trim(),
 });
 
 export const updateSchema = z.object({
   id: z.string().trim(),
+  userId: z.string().trim(),
 });
 
 export const removeSchema = z.object({
   id: z.string().trim(),
+  userId: z.string().trim(),
 });
