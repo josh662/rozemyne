@@ -46,11 +46,6 @@ export interface IEventOptions {
   eventName: string;
 
   /**
-   * ID do tenant em que o evento ocorreu
-   */
-  tenantId?: string;
-
-  /**
    * Horário em que o evento aconteceu.
    * @default new Date()
    */

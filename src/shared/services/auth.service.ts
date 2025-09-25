@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 
-import { PrismaService } from 'src/prisma';
+import { EUserRole, PrismaService } from 'src/prisma';
 
 import { JwtDto } from 'src/interfaces';
 import { TEnv } from 'src/utils';
@@ -13,6 +13,7 @@ import { EOriginRoutes } from 'src/routes';
 interface IAuthenticatedSuccess {
   success: true;
   userId: string;
+  userRole: EUserRole;
 }
 
 interface IAuthenticatedFailure {
@@ -43,8 +44,6 @@ export class AuthService {
       const splitted = authorization.split(' ');
       const token = splitted.length > 1 ? splitted[1] : splitted[0];
 
-      let userId = '';
-
       const { sub, jti }: JwtDto = this.jwtService.verify(token, {
         secret: this.configService.get<string>('SYSTEM_KEY'),
       });
@@ -55,6 +54,7 @@ export class AuthService {
         expiredAt: Date | null;
         user: {
           id: string;
+          role: EUserRole;
         };
       }>(this.origin, `user:${sub}:session:${jti}`);
 
@@ -76,6 +76,7 @@ export class AuthService {
             user: {
               select: {
                 id: true,
+                role: true,
               },
             },
           },
@@ -104,9 +105,11 @@ export class AuthService {
         );
       }
 
-      userId = session.user.id;
-
-      return { success: true, userId };
+      return {
+        success: true,
+        userId: session.user.id,
+        userRole: session.user.role,
+      };
     } catch (err) {
       this.logger.warn(`Access denied: invalid authorization token`);
       return { success: false };

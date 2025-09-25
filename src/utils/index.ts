@@ -1,4 +1,5 @@
 export * from './checks';
+export * from './code';
 export * from './env';
 export * from './id';
 export * from './number';

@@ -1,8 +1,5 @@
-import z from 'zod';
-
 export interface IProps {
-  tenantId: string;
-  userId?: string;
+  userId: string;
 }
 
 export class JwtDto {
@@ -30,12 +27,6 @@ export class JwtDto {
   (Expiration - Expiração) → Timestamp indicando quando o token expira.
   */
   readonly exp?: number;
-}
-
-export type TPermissionConfig = [string, z.ZodObject<any> | undefined];
-
-export interface IPermissionConfig {
-  key: string;
 }
 
 export enum EAction {

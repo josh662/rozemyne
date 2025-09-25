@@ -22,8 +22,8 @@ import { envSchema } from 'src/utils';
 
 import { SharedModule } from 'src/shared/shared.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
-// import { adminModules } from '../admin';
-// import { coreModules } from '../core';
+import { adminModules } from '../admin';
+import { coreModules } from '../core';
 
 @Module({
   imports: [
@@ -64,8 +64,8 @@ import { PrismaModule } from 'src/prisma/prisma.module';
     }),
     PrismaModule,
     SharedModule,
-    // ...adminModules,
-    // ...coreModules,
+    ...adminModules,
+    ...coreModules,
   ],
   controllers,
   providers: [
