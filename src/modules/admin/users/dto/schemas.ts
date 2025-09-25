@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { EUserStatus } from 'src/prisma'; // Adjust the import path to match your project structure
+import { EUserStatus } from 'src/prisma';
 import {
   createListSchema,
   dateSchema,
