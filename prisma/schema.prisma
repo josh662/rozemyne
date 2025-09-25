@@ -1,0 +1,196 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "./generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum EUserStatus {
+  ACTIVE // Usuário ativo
+  SUSPENDED // Usuário suspenso (sem acesso ao sistema)
+  DELETED // Usuário excluído
+}
+
+enum EUserRole {
+  ADMIN // Administrador
+  CUSTOMER // Usuário comum da aplicação
+}
+
+// Tabela que representa um usuário no sistema
+model User {
+  id                    String         @id
+  status                EUserStatus    @default(ACTIVE) // Status do usuário
+  firstName             String
+  lastName              String
+  email                 String         @unique
+  emailVerifiedAt       DateTime? // Indica se o email foi verificado
+  phoneNumber           String? // Número de telefone do usuário
+  phoneNumberVerifiedAt DateTime? // Indica se o telefone foi verificado
+  password              String
+  totpEnabled           Boolean        @default(false) // Indica se a autenticação multifator está habilitada
+  totpSecret            String? // Segredo para autenticação multifator
+  role                  EUserRole      @default(CUSTOMER)
+  preferences           Json?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @default(now()) @updatedAt
+  Verification          Verification[]
+  Session               Session[]
+  List                  List[]
+  Save                  Save[]
+  Comment               Comment[]
+
+  @@map("users")
+}
+
+enum EVerificationType {
+  EMAIL
+  PHONE
+  PASSWORD
+}
+
+model Verification {
+  id        String            @unique
+  userId    String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  type      EVerificationType // Tipo de verificação
+  code      String            @unique // Código de validação
+  value     String // Valor que está sendo verificado (Seria o email ou telefone por exemplo)
+  expiredAt DateTime
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @default(now()) @updatedAt
+
+  @@id([userId, type])
+  @@map("verifications")
+}
+
+// Tabela que representa um login de usuário no sistema (para auditoria, controle e segurança)
+model Session {
+  id        String    @id
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  number    Int?      @default(0)
+  success   Boolean   @default(true) // Indica se o login foi bem-sucedido
+  error     String? // Mensagem de erro, se o login falhou
+  ipAddress String? // Endereço IP do usuário no momento do login
+  userAgent String? // User-Agent do navegador ou aplicativo usado para o login
+  expiredAt DateTime? // Data e hora em que o login expirou, se aplicável
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+
+  @@map("sessions")
+}
+
+enum EMediaType {
+  MOVIE // Filme
+  SERIES // Série
+  MANGA // Manga
+  COMICS // HQ
+}
+
+// Modelo que representa as medias da plataforma (Filmes, séries, mangas, HQ's, etc)
+model Media {
+  id             String           @id
+  name           String
+  description    String?
+  type           EMediaType
+  rating         Float? // nota de 0 a 10, por exemplo
+  releaseDate    DateTime? // data de lançamento
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  MediaComponent MediaComponent[]
+  Save           Save[]
+  ListMedia      ListMedia[]
+  Comment        Comment[]
+
+  @@map("medias")
+}
+
+// Modelo que registra os componentes individuais de uma media (capítulos ou episódios por exemplo)
+model MediaComponent {
+  id          String    @unique
+  mediaId     String
+  media       Media     @relation(fields: [mediaId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  group       String // Unificação por um nome (Temporada X, Volume X)
+  number      Int // número do episódio, capítulo, etc.
+  title       String?
+  description String?
+  duration    Int?
+  releaseDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @default(now()) @updatedAt
+  Save        Save[]
+  Comment     Comment[]
+
+  @@id([mediaId, group, number])
+  @@map("mediaComponents")
+}
+
+model Comment {
+  id               String          @id
+  mediaId          String
+  media            Media           @relation(fields: [mediaId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  mediaComponentId String? // Registra em que parte ele estava vendo (capítulo ou episódio)
+  mediaComponent   MediaComponent? @relation(fields: [mediaComponentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  spoiler          Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
+
+  @@map("comments")
+}
+
+// Modelo que registra as listas de conteúdos dos usuários
+model List {
+  id        String      @id
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  name      String
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  ListMedia ListMedia[]
+
+  @@map("lists")
+}
+
+model ListMedia {
+  listId  String
+  list    List   @relation(fields: [listId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  mediaId String
+  media   Media  @relation(fields: [mediaId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@id([listId, mediaId])
+  @@map("listMedias")
+}
+
+enum ESaveStatus {
+  INTERESTED // Interessado
+  SEEING // Lendo / Vendo / Olhando
+  ABANDONED // Deixou de ver
+}
+
+// Modelo que salva o que o usuário está acompanhando/acompanhou
+model Save {
+  id               String          @id
+  mediaId          String
+  media            Media           @relation(fields: [mediaId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  userId           String
+  user             User            @relation(fields: [userId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  mediaComponentId String? // Registra em que parte ele estava vendo (capítulo ou episódio)
+  mediaComponent   MediaComponent? @relation(fields: [mediaComponentId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  mediaComponentIn Int? // Registra o ponto exato dentro do "mediaComponent" do último ponto de parada
+  status           ESaveStatus
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @default(now()) @updatedAt
+
+  @@map("saves")
+}
