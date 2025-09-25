@@ -5,10 +5,12 @@ import { publicServices, services } from './services';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { SharedModule } from 'src/shared/shared.module';
 
+import { AdminCommentsModule } from 'src/modules/admin/comments/module.module';
+
 @Module({
-  imports: [PrismaModule, SharedModule],
+  imports: [PrismaModule, SharedModule, AdminCommentsModule],
   controllers,
   providers: services,
   exports: publicServices,
 })
-export class AdminMediaComponentsModule {}
+export class CommentsModule {}

@@ -12,7 +12,7 @@ import { BaseModuleController } from 'src/shared/services';
 @ApiBearerAuth()
 @Auth()
 @Admin()
-@Controller({ path: `:userId/${origin}` })
+@Controller({ path: `admin/:userId/${origin}` })
 export class ModuleController extends BaseModuleController {
   constructor(private readonly moduleService: ModuleService) {
     super();

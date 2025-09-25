@@ -1,17 +1,17 @@
-import { CommentsModule } from './comments/module.module';
-import { ListsModule } from './lists/module.module';
-import { MediasModule } from './medias/module.module';
-import { MediaComponentsModule } from './mediaComponents/module.module';
-import { SavesModule } from './saves/module.module';
-import { UsersModule } from './users/module.module';
-import { VerificationsModule } from './verifications/module.module';
+import { AdminCommentsModule } from './comments/module.module';
+import { AdminListsModule } from './lists/module.module';
+import { AdminMediasModule } from './medias/module.module';
+import { AdminMediaComponentsModule } from './mediaComponents/module.module';
+import { AdminSavesModule } from './saves/module.module';
+import { AdminUsersModule } from './users/module.module';
+import { AdminVerificationsModule } from './verifications/module.module';
 
 export const adminModules = [
-  CommentsModule,
-  ListsModule,
-  MediaComponentsModule,
-  SavesModule,
-  MediasModule,
-  UsersModule,
-  VerificationsModule,
+  AdminCommentsModule,
+  AdminListsModule,
+  AdminMediaComponentsModule,
+  AdminSavesModule,
+  AdminMediasModule,
+  AdminUsersModule,
+  AdminVerificationsModule,
 ];
