@@ -8,7 +8,7 @@ import { IResponse } from 'src/interfaces';
 import { Admin, Auth, SwaggerFind, SwaggerList } from 'src/decorators';
 import { BaseModuleController } from 'src/shared/services';
 
-@ApiTags(origin)
+@ApiTags(`admin ${origin}`)
 @ApiBearerAuth()
 @Auth()
 @Admin()

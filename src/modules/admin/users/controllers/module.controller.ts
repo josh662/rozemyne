@@ -29,7 +29,7 @@ import {
 } from 'src/decorators';
 import { BaseModuleController } from 'src/shared/services';
 
-@ApiTags(origin)
+@ApiTags(`admin ${origin}`)
 @ApiBearerAuth()
 @Auth()
 @Admin()

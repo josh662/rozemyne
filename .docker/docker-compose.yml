@@ -1,0 +1,48 @@
+name: rozemyne
+
+services:
+  # Serviço da API NestJS
+  api:
+    container_name: rozemyne-api
+    image: rozemyne-api:latest
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    env_file:
+      - ../.env
+    depends_on:
+      - db
+      - cache
+
+  # Serviço do Banco de Dados PostgreSQL
+  db:
+    container_name: rozemyne-db
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rozemyne
+    ports:
+      - '5433:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Serviço de Cache com Redis
+  cache:
+    container_name: rozemyne-cache
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6378:6379'
+    volumes:
+      - redis_data:/data
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

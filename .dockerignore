@@ -1,0 +1,14 @@
+# Folders
+/.vscode
+/.git
+/.github
+/node_modules
+/dist
+/test
+
+# Files
+.dockerignore
+.eslintrc.js
+.gitignore
+.prettierrc
+README.md
