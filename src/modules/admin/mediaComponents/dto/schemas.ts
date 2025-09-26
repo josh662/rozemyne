@@ -16,7 +16,7 @@ export const createSchema = z.object({
   title: z.string().trim().optional(),
   description: z.string().trim().optional(),
   duration: z.int(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
 });
 
 export const listSchema = createListSchema({
@@ -27,7 +27,7 @@ export const listSchema = createListSchema({
   title: z.string().trim().optional(),
   description: z.string().trim().optional(),
   duration: z.int().optional(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
   createdAt: dateSchema.optional(),
 });
 
@@ -44,7 +44,7 @@ export const updateSchema = z.object({
   title: z.string().trim().optional(),
   description: z.string().trim().optional(),
   duration: z.int().optional(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
 });
 
 export const removeSchema = z.object({

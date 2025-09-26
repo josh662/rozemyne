@@ -1,0 +1,6 @@
+services:
+  api:
+    environment:
+      # Estas variáveis sobrepõem as do .env quando o container 'api' é iniciado
+      DATABASE_URL: 'postgresql://user:password@rozemyne-db:5432/rozemyne?schema=public'
+      REDIS_URL: 'redis://rozemyne-cache:6379'

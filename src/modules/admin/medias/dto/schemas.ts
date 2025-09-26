@@ -22,7 +22,7 @@ export const createSchema = z.object({
   description: z.string().trim().optional(),
   type: mediaType,
   rating: z.float32().optional(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
 });
 
 export const listSchema = createListSchema({
@@ -31,7 +31,7 @@ export const listSchema = createListSchema({
   description: z.string().trim().optional(),
   type: mediaType.optional(),
   rating: z.float32().optional(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
   createdAt: dateSchema.optional(),
 });
 
@@ -45,7 +45,7 @@ export const updateSchema = z.object({
   description: z.string().trim().optional(),
   type: mediaType.optional(),
   rating: z.float32().optional(),
-  releaseDate: z.iso.date().optional(),
+  releaseDate: dateSchema.optional(),
 });
 
 export const removeSchema = z.object({

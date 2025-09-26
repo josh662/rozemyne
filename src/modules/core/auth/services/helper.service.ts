@@ -262,12 +262,12 @@ export class HelperService extends BaseHelperService {
         ...(verification.type === EVerificationType.EMAIL
           ? {
               email: verification.value,
-              emailVerifiedAt: now,
+              emailVerifiedAt: new Date(now),
             }
           : verification.type === EVerificationType.PHONE
             ? {
                 phoneNumber: verification.value,
-                phoneNumberVerifiedAt: now,
+                phoneNumberVerifiedAt: new Date(now),
               }
             : {
                 password: String(data.newPassword),
